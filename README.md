@@ -21,4 +21,4 @@ The goal of the MVP is to implement basic CRUD functionality for tasks while mai
 
 ```bash
 npm install
-npm run dev# Project Title 
+npm run dev
