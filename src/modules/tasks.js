@@ -11,11 +11,18 @@ try {
   tasks = [];
 }
 
-export function addTask(task) {
-  if (!task || !task.trim()) {
+export function addTask(taskText, deadline = null) {
+  if (!taskText || !taskText.trim()) {
     return false;
   }
-  tasks.push(task.trim());
+  
+  const task = {
+    text: taskText.trim(),
+    deadline: deadline ? new Date(deadline).getTime() : null,
+    createdAt: Date.now()
+  };
+  
+  tasks.push(task);
   save();
   return true;
 }
@@ -31,6 +38,11 @@ export function removeTask(index) {
 
 export function getTasks() {
   return [...tasks];
+}
+
+export function isTaskOverdue(task) {
+  if (!task.deadline) return false;
+  return Date.now() > task.deadline;
 }
 
 function save() {

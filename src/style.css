@@ -78,6 +78,21 @@ body {
   color: var(--text-light);
 }
 
+.deadline-input {
+  padding: 12px 16px;
+  border: 2px solid var(--border);
+  border-radius: 8px;
+  font-size: 0.95rem;
+  color: var(--text);
+  background-color: var(--card-bg);
+  transition: border-color 0.3s;
+}
+
+.deadline-input:focus {
+  outline: none;
+  border-color: var(--primary);
+}
+
 .add-btn {
   padding: 12px 24px;
   background-color: var(--primary);
@@ -126,10 +141,38 @@ body {
   background-color: var(--bg);
 }
 
-.task-text {
+.task-content {
   flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.task-text {
   color: var(--text);
   word-break: break-word;
+  font-weight: 500;
+}
+
+.task-deadline {
+  font-size: 0.85rem;
+  color: var(--text-light);
+  font-weight: 400;
+}
+
+.task-overdue {
+  background-color: #fee2e2;
+  border-left: 4px solid var(--danger);
+}
+
+.task-overdue .task-text {
+  color: var(--danger);
+  font-weight: 600;
+}
+
+.task-overdue .task-deadline {
+  color: #991b1b;
+  font-weight: 500;
 }
 
 .task-delete-btn {
@@ -170,7 +213,8 @@ body {
     flex-direction: column;
   }
 
-  .add-btn {
+  .add-btn,
+  .deadline-input {
     width: 100%;
   }
 
