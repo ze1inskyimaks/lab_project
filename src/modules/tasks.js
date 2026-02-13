@@ -11,15 +11,17 @@ try {
   tasks = [];
 }
 
-export function addTask(taskText, deadline = null) {
+export function addTask(taskText, description = '', deadline = null) {
   if (!taskText || !taskText.trim()) {
     return false;
   }
   
   const task = {
     text: taskText.trim(),
+    description: description.trim(),
     deadline: deadline ? new Date(deadline).getTime() : null,
-    createdAt: Date.now()
+    createdAt: Date.now(),
+    expanded: false
   };
   
   tasks.push(task);
@@ -38,6 +40,15 @@ export function removeTask(index) {
 
 export function getTasks() {
   return [...tasks];
+}
+
+export function toggleTaskExpanded(index) {
+  if (index >= 0 && index < tasks.length) {
+    tasks[index].expanded = !tasks[index].expanded;
+    save();
+    return true;
+  }
+  return false;
 }
 
 export function isTaskOverdue(task) {

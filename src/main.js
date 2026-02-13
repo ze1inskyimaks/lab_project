@@ -1,6 +1,7 @@
-import { addTask, removeTask, getTasks, isTaskOverdue } from './modules/tasks.js';
+import { addTask, removeTask, getTasks, isTaskOverdue, toggleTaskExpanded } from './modules/tasks.js';
 
 const input = document.querySelector('#taskInput');
+const descriptionInput = document.querySelector('#descriptionInput');
 const deadlineInput = document.querySelector('#deadlineInput');
 const addBtn = document.querySelector('#addBtn');
 const taskList = document.querySelector('#taskList');
@@ -54,24 +55,41 @@ function render() {
         li.classList.add('task-overdue');
       }
 
-      // Task text
-      const taskText = document.createElement('div');
-      taskText.className = 'task-content';
+      // Main task container
+      const taskMainContainer = document.createElement('div');
+      taskMainContainer.className = 'task-main';
+
+      // Task text and info
+      const taskContent = document.createElement('div');
+      taskContent.className = 'task-content';
 
       const textSpan = document.createElement('span');
       textSpan.className = 'task-text';
       textSpan.textContent = task.text;
-      taskText.appendChild(textSpan);
+      taskContent.appendChild(textSpan);
 
       // Deadline info if exists
       if (task.deadline) {
         const deadlineSpan = document.createElement('span');
         deadlineSpan.className = 'task-deadline';
         deadlineSpan.textContent = getTimeRemaining(task.deadline);
-        taskText.appendChild(deadlineSpan);
+        taskContent.appendChild(deadlineSpan);
       }
 
-      li.appendChild(taskText);
+      taskMainContainer.appendChild(taskContent);
+
+      // View button (if has description)
+      const hasDescription = task.description;
+      if (hasDescription) {
+        const viewBtn = document.createElement('button');
+        viewBtn.className = 'task-view-btn';
+        viewBtn.textContent = task.expanded ? 'Hide' : 'View';
+        viewBtn.addEventListener('click', () => {
+          toggleTaskExpanded(index);
+          render();
+        });
+        taskMainContainer.appendChild(viewBtn);
+      }
 
       // Delete button
       const deleteBtn = document.createElement('button');
@@ -82,7 +100,20 @@ function render() {
         render();
       });
 
-      li.appendChild(deleteBtn);
+      taskMainContainer.appendChild(deleteBtn);
+      li.appendChild(taskMainContainer);
+
+      // Description section (if expanded)
+      if (task.expanded && hasDescription) {
+        const descContainer = document.createElement('div');
+        descContainer.className = 'task-description-container';
+        const descText = document.createElement('p');
+        descText.className = 'task-description';
+        descText.textContent = task.description;
+        descContainer.appendChild(descText);
+        li.appendChild(descContainer);
+      }
+
       taskList.appendChild(li);
     });
   }
@@ -90,11 +121,13 @@ function render() {
 
 function addNewTask() {
   const taskText = input.value.trim();
+  const description = descriptionInput.value.trim();
   const deadline = deadlineInput.value ? new Date(deadlineInput.value) : null;
 
   if (taskText) {
-    addTask(taskText, deadline);
+    addTask(taskText, description, deadline);
     input.value = '';
+    descriptionInput.value = '';
     deadlineInput.value = '';
     input.focus();
     render();
