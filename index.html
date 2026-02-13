@@ -17,7 +17,7 @@
       <input 
         id="taskInput" 
         type="text" 
-        placeholder="Add a new task..."
+        placeholder="Enter a new task..."
         class="task-input"
       />
       <textarea
@@ -32,13 +32,17 @@
         class="deadline-input"
         title="Optional deadline"
       />
-      <button id="addBtn" class="add-btn">Add</button>
+      <button id="addBtn" class="add-btn">Add Task</button>
     </div>
+
+    <div id="stats" class="stats"></div>
 
     <div class="task-list-wrapper">
       <ul id="taskList" class="task-list"></ul>
       <p id="emptyState" class="empty-state">No tasks yet. Add one to get started!</p>
     </div>
+
+    <button id="clearCompletedBtn" class="clear-btn">Clear Completed</button>
   </div>
 
   <script type="module" src="/src/main.js"></script>

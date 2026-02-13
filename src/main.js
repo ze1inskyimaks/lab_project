@@ -1,4 +1,28 @@
-import { addTask, removeTask, getTasks, isTaskOverdue, toggleTaskExpanded } from './modules/tasks.js';
+import './style.css';
+import { TaskManager } from './taskManager.js';
+
+const taskManager = new TaskManager();
+
+// Load tasks from localStorage
+try {
+  const stored = localStorage.getItem('tasks');
+  if (stored) {
+    const tasks = JSON.parse(stored);
+    tasks.forEach(task => {
+      const newTask = taskManager.addTask(
+        task.title || task.text, 
+        task.description || '', 
+        task.deadline ? new Date(task.deadline) : null
+      );
+      newTask.id = task.id;
+      newTask.completed = task.completed || false;
+      newTask.expanded = task.expanded || false;
+      taskManager.nextId = Math.max(taskManager.nextId, task.id + 1);
+    });
+  }
+} catch (e) {
+  console.error('Error loading tasks:', e);
+}
 
 const input = document.querySelector('#taskInput');
 const descriptionInput = document.querySelector('#descriptionInput');
@@ -6,19 +30,8 @@ const deadlineInput = document.querySelector('#deadlineInput');
 const addBtn = document.querySelector('#addBtn');
 const taskList = document.querySelector('#taskList');
 const emptyState = document.querySelector('#emptyState');
-
-function formatDeadline(timestamp) {
-  if (!timestamp) return '';
-  const date = new Date(timestamp);
-  const today = new Date();
-  const tomorrow = new Date(today);
-  tomorrow.setDate(tomorrow.getDate() + 1);
-
-  const dateStr = date.toLocaleDateString('uk-UA');
-  const timeStr = date.toLocaleTimeString('uk-UA', { hour: '2-digit', minute: '2-digit' });
-
-  return `${dateStr} at ${timeStr}`;
-}
+const statsDiv = document.querySelector('#stats');
+const clearCompletedBtn = document.querySelector('#clearCompletedBtn');
 
 function getTimeRemaining(timestamp) {
   if (!timestamp) return '';
@@ -38,35 +51,66 @@ function getTimeRemaining(timestamp) {
   return `${minutes}m left`;
 }
 
+function updateStats() {
+  if (statsDiv) {
+    const stats = taskManager.getStats();
+    statsDiv.textContent = `Total: ${stats.total} | Completed: ${stats.completed} | Pending: ${stats.pending}`;
+  }
+}
+
+function saveTasks() {
+  const tasksToSave = taskManager.getTasks().map(task => ({
+    id: task.id,
+    title: task.title,
+    description: task.description,
+    deadline: task.deadline,
+    completed: task.completed,
+    expanded: task.expanded,
+    createdAt: task.createdAt
+  }));
+  localStorage.setItem('tasks', JSON.stringify(tasksToSave));
+}
+
 function render() {
-  const tasks = getTasks();
+  const tasks = taskManager.getTasks();
   taskList.innerHTML = '';
 
   if (tasks.length === 0) {
     emptyState.style.display = 'block';
   } else {
     emptyState.style.display = 'none';
-    tasks.forEach((task, index) => {
+    tasks.forEach((task) => {
       const li = document.createElement('li');
-      li.className = 'task-item';
-
-      // Check if overdue and apply class
-      if (isTaskOverdue(task)) {
+      li.className = `task-item ${task.completed ? 'completed' : ''}`;
+      if (taskManager.isTaskOverdue(task.id)) {
         li.classList.add('task-overdue');
       }
+      li.dataset.id = task.id;
 
-      // Main task container
-      const taskMainContainer = document.createElement('div');
-      taskMainContainer.className = 'task-main';
+      // Main container
+      const mainContainer = document.createElement('div');
+      mainContainer.className = 'task-main';
 
-      // Task text and info
+      // Checkbox and text
       const taskContent = document.createElement('div');
       taskContent.className = 'task-content';
 
-      const textSpan = document.createElement('span');
-      textSpan.className = 'task-text';
-      textSpan.textContent = task.text;
-      taskContent.appendChild(textSpan);
+      const checkbox = document.createElement('input');
+      checkbox.type = 'checkbox';
+      checkbox.checked = task.completed;
+      checkbox.addEventListener('change', () => {
+        taskManager.toggleTask(task.id);
+        saveTasks();
+        render();
+        updateStats();
+      });
+
+      const span = document.createElement('span');
+      span.className = 'task-text';
+      span.textContent = task.title;
+      
+      taskContent.appendChild(checkbox);
+      taskContent.appendChild(span);
 
       // Deadline info if exists
       if (task.deadline) {
@@ -76,35 +120,37 @@ function render() {
         taskContent.appendChild(deadlineSpan);
       }
 
-      taskMainContainer.appendChild(taskContent);
+      mainContainer.appendChild(taskContent);
 
       // View button (if has description)
-      const hasDescription = task.description;
-      if (hasDescription) {
+      if (task.description) {
         const viewBtn = document.createElement('button');
         viewBtn.className = 'task-view-btn';
         viewBtn.textContent = task.expanded ? 'Hide' : 'View';
         viewBtn.addEventListener('click', () => {
-          toggleTaskExpanded(index);
+          taskManager.toggleTaskExpanded(task.id);
+          saveTasks();
           render();
         });
-        taskMainContainer.appendChild(viewBtn);
+        mainContainer.appendChild(viewBtn);
       }
 
       // Delete button
       const deleteBtn = document.createElement('button');
-      deleteBtn.className = 'task-delete-btn';
       deleteBtn.textContent = 'Delete';
+      deleteBtn.className = 'task-delete-btn';
       deleteBtn.addEventListener('click', () => {
-        removeTask(index);
+        taskManager.removeTask(task.id);
+        saveTasks();
         render();
+        updateStats();
       });
 
-      taskMainContainer.appendChild(deleteBtn);
-      li.appendChild(taskMainContainer);
+      mainContainer.appendChild(deleteBtn);
+      li.appendChild(mainContainer);
 
       // Description section (if expanded)
-      if (task.expanded && hasDescription) {
+      if (task.expanded && task.description) {
         const descContainer = document.createElement('div');
         descContainer.className = 'task-description-container';
         const descText = document.createElement('p');
@@ -117,6 +163,8 @@ function render() {
       taskList.appendChild(li);
     });
   }
+
+  updateStats();
 }
 
 function addNewTask() {
@@ -125,12 +173,17 @@ function addNewTask() {
   const deadline = deadlineInput.value ? new Date(deadlineInput.value) : null;
 
   if (taskText) {
-    addTask(taskText, description, deadline);
-    input.value = '';
-    descriptionInput.value = '';
-    deadlineInput.value = '';
-    input.focus();
-    render();
+    try {
+      taskManager.addTask(taskText, description, deadline);
+      saveTasks();
+      input.value = '';
+      descriptionInput.value = '';
+      deadlineInput.value = '';
+      input.focus();
+      render();
+    } catch (error) {
+      alert(error.message);
+    }
   }
 }
 
@@ -141,6 +194,14 @@ input.addEventListener('keypress', (e) => {
     addNewTask();
   }
 });
+
+if (clearCompletedBtn) {
+  clearCompletedBtn.addEventListener('click', () => {
+    taskManager.clearCompleted();
+    saveTasks();
+    render();
+  });
+}
 
 // Update deadline displays every minute
 setInterval(() => {
