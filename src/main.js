@@ -1,6 +1,19 @@
 import './style.css';
 import { TaskManager } from './taskManager.js';
 
+// Environment status
+const appStatus = import.meta.env.VITE_APP_STATUS || 'Unknown';
+console.log(`%c Task Manager - ${appStatus}`, 'color: #4f46e5; font-weight: bold; font-size: 14px;');
+
+// Set status in HTML data attribute for debugging
+document.documentElement.setAttribute('data-app-status', appStatus);
+
+// Display status on page
+const statusElement = document.querySelector('#appStatus');
+if (statusElement) {
+  statusElement.textContent = `[${appStatus}]`;
+}
+
 const taskManager = new TaskManager();
 
 // Load tasks from localStorage

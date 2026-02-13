@@ -63,6 +63,15 @@ body {
   font-weight: 500;
 }
 
+.app-status {
+  color: var(--primary);
+  font-size: 0.85rem;
+  font-weight: 700;
+  margin-top: 0.5rem;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
 .task-input-wrapper {
   display: flex;
   flex-direction: column;
@@ -382,3 +391,5 @@ body {
   .clear-btn {
     padding: 12px;
     font-size: 0.95rem;
+  }
+}
