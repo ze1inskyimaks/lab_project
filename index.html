@@ -1,5 +1,34 @@
-<h1>Task Manager</h1>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Task Manager</title>
+  <link rel="stylesheet" href="/src/style.css">
+</head>
+<body>
+  <div class="container">
+    <header class="header">
+      <h1>Task Manager</h1>
+      <p class="subtitle">Manage your tasks efficiently</p>
+    </header>
 
-<input id="taskInput" />
-<button id="addBtn">Add</button>
-<ul id="taskList"></ul>
+    <div class="task-input-wrapper">
+      <input 
+        id="taskInput" 
+        type="text" 
+        placeholder="Add a new task..."
+        class="task-input"
+      />
+      <button id="addBtn" class="add-btn">Add</button>
+    </div>
+
+    <div class="task-list-wrapper">
+      <ul id="taskList" class="task-list"></ul>
+      <p id="emptyState" class="empty-state">No tasks yet. Add one to get started!</p>
+    </div>
+  </div>
+
+  <script type="module" src="/src/main.js"></script>
+</body>
+</html>
